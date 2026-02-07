@@ -96,10 +96,9 @@ curl -s -X POST "http://127.0.0.1:33333/mcp" \
 ```
 
 ## Showcase
-
-https://github.com/user-attachments/assets/172030e4-f1e9-41fc-b807-e7f60674d54c
-
 https://github.com/user-attachments/assets/e9de7c4d-b956-4424-bbff-19b1d0d69afe
+
+https://github.com/user-attachments/assets/ce12f257-66ce-4e93-92de-3dace355d2ed
 
 ## Recaf Plugin Dev Docs
 
