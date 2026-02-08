@@ -10,7 +10,7 @@ import static org.example.plugin.mcp.util.JsonUtil.*;
 
 public final class McpProtocolHandler {
 
-	private static final String PROTOCOL_VERSION = "2026-02-08";
+	private static final String PROTOCOL_VERSION = "2025-03-26";
 	private static final Gson GSON = new Gson();
 	private final Map<String, McpTool> tools = new LinkedHashMap<>();
 
