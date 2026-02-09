@@ -53,11 +53,27 @@ Tool names must use underscores (no dots).
 
 - `recaf_workspace_status`
 - `recaf_workspace_list_classes`
+- `recaf_workspace_list_files`
 - `recaf_class_get_outline`
+- `recaf_class_info`
+- `recaf_class_delete`
 - `recaf_class_decompile`
 - `recaf_class_disassemble`
+- `recaf_method_disassemble`
 - `recaf_class_assemble_apply`
 - `recaf_mapping_apply`
+- `recaf_method_bytecode`
+- `recaf_file_read`
+- `recaf_compile_java`
+- `recaf_patch`
+- `recaf_search_string`
+- `recaf_search_number`
+- `recaf_search_references`
+- `recaf_search_declarations`
+- `recaf_method_callgraph`
+- `recaf_class_inheritance`
+- `recaf_comment_get`
+- `recaf_comment_set`
 
 All class names use JVM internal format: `com/example/Foo`.
 
