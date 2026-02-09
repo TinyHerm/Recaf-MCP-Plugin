@@ -10,9 +10,16 @@ import software.coley.recaf.analytics.logging.Logging;
 import software.coley.recaf.plugin.Plugin;
 import software.coley.recaf.plugin.PluginInformation;
 import software.coley.recaf.services.assembler.AssemblerPipelineManager;
+import software.coley.recaf.services.callgraph.CallGraphService;
+import software.coley.recaf.services.comment.CommentManager;
 import software.coley.recaf.services.decompile.DecompilerManager;
+import software.coley.recaf.services.inheritance.InheritanceGraphService;
 import software.coley.recaf.services.mapping.MappingApplierService;
+import software.coley.recaf.services.search.SearchService;
+import software.coley.recaf.services.compile.JavacCompiler;
 import software.coley.recaf.services.workspace.WorkspaceManager;
+import software.coley.recaf.services.workspace.patch.PatchProvider;
+import software.coley.recaf.services.workspace.patch.PatchApplier;
 import software.coley.recaf.ui.docking.DockingManager;
 import software.coley.recaf.util.FxThreadUtil;
 import software.coley.bentofx.dockable.Dockable;
@@ -39,8 +46,17 @@ public class RecafMcpPlugin implements Plugin {
 	                      DecompilerManager decompilerManager,
 	                      MappingApplierService mappingApplierService,
 	                      AssemblerPipelineManager assemblerPipelineManager,
+	                      SearchService searchService,
+	                      CallGraphService callGraphService,
+	                      InheritanceGraphService inheritanceGraphService,
+	                      CommentManager commentManager,
+	                      JavacCompiler javacCompiler,
+	                      PatchProvider patchProvider,
+	                      PatchApplier patchApplier,
 	                      Instance<DockingManager> dockingManager) {
-		this.mcpServer = new McpServer(workspaceManager, decompilerManager, mappingApplierService, assemblerPipelineManager);
+		this.mcpServer = new McpServer(workspaceManager, decompilerManager, mappingApplierService,
+				assemblerPipelineManager, searchService, callGraphService, inheritanceGraphService,
+				commentManager, javacCompiler, patchProvider, patchApplier);
 		this.dockingManager = dockingManager;
 	}
 

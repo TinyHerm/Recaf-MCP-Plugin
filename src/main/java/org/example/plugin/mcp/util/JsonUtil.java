@@ -31,6 +31,16 @@ public final class JsonUtil {
 		return el != null && el.isJsonArray() ? el.getAsJsonArray() : null;
 	}
 
+	public static boolean bool(JsonElement el, boolean def) {
+		if (el == null || el.isJsonNull()) return def;
+		try { return el.getAsBoolean(); } catch (Exception e) { return def; }
+	}
+
+	public static double dbl(JsonElement el, double def) {
+		if (el == null || el.isJsonNull()) return def;
+		try { return el.getAsDouble(); } catch (Exception e) { return def; }
+	}
+
 	public static JsonObject error(String message) {
 		JsonObject o = new JsonObject();
 		o.addProperty("error", message);

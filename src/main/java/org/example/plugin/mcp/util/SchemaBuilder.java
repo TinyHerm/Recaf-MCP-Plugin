@@ -64,4 +64,28 @@ public final class SchemaBuilder {
 		o.add("items", items);
 		return o;
 	}
+
+	public static JsonObject bool(String desc) {
+		JsonObject o = new JsonObject();
+		o.addProperty("type", "boolean");
+		o.addProperty("description", desc);
+		return o;
+	}
+
+	public static JsonObject number(String desc) {
+		JsonObject o = new JsonObject();
+		o.addProperty("type", "number");
+		o.addProperty("description", desc);
+		return o;
+	}
+
+	public static JsonObject enumString(String desc, String... values) {
+		JsonObject o = new JsonObject();
+		o.addProperty("type", "string");
+		o.addProperty("description", desc);
+		JsonArray arr = new JsonArray();
+		for (String v : values) arr.add(v);
+		o.add("enum", arr);
+		return o;
+	}
 }
