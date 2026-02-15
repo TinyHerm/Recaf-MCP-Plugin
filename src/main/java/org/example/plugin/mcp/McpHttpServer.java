@@ -81,8 +81,7 @@ public final class McpHttpServer implements Closeable {
 
 			String responseBody = handler.apply(req.body);
 			sendJsonResponse(out, responseBody);
-		} catch (Exception e) {
-			// connection-level errors
+		} catch (Exception ignored) {
 		}
 	}
 

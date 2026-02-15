@@ -15,11 +15,10 @@ import software.coley.recaf.services.comment.CommentManager;
 import software.coley.recaf.services.decompile.DecompilerManager;
 import software.coley.recaf.services.inheritance.InheritanceGraphService;
 import software.coley.recaf.services.mapping.MappingApplierService;
+import software.coley.recaf.services.mapping.gen.MappingGenerator;
+import software.coley.recaf.services.navigation.Actions;
 import software.coley.recaf.services.search.SearchService;
-import software.coley.recaf.services.compile.JavacCompiler;
 import software.coley.recaf.services.workspace.WorkspaceManager;
-import software.coley.recaf.services.workspace.patch.PatchProvider;
-import software.coley.recaf.services.workspace.patch.PatchApplier;
 import software.coley.recaf.ui.docking.DockingManager;
 import software.coley.recaf.util.FxThreadUtil;
 import software.coley.bentofx.dockable.Dockable;
@@ -50,13 +49,12 @@ public class RecafMcpPlugin implements Plugin {
 	                      CallGraphService callGraphService,
 	                      InheritanceGraphService inheritanceGraphService,
 	                      CommentManager commentManager,
-	                      JavacCompiler javacCompiler,
-	                      PatchProvider patchProvider,
-	                      PatchApplier patchApplier,
+	                      MappingGenerator mappingGenerator,
+	                      Instance<Actions> actions,
 	                      Instance<DockingManager> dockingManager) {
 		this.mcpServer = new McpServer(workspaceManager, decompilerManager, mappingApplierService,
 				assemblerPipelineManager, searchService, callGraphService, inheritanceGraphService,
-				commentManager, javacCompiler, patchProvider, patchApplier);
+				commentManager, mappingGenerator, actions);
 		this.dockingManager = dockingManager;
 	}
 
@@ -69,47 +67,47 @@ public class RecafMcpPlugin implements Plugin {
 			logger.error("Failed to start MCP server: {}", e.getMessage(), e);
 			return;
 		}
-
 		FxThreadUtil.run(() -> tryOpenUi(0));
 	}
 
 	private void tryOpenUi(int attempt) {
-		final int maxAttempts = 40;
-		final long retryDelayMs = 250;
-
-		if (attempt >= maxAttempts) {
+		if (attempt >= 40) {
 			logger.warn("Failed to open MCP status UI: docking containers not ready");
 			return;
 		}
 
 		try {
 			DockingManager dm = dockingManager.get();
-			DockContainerPath containerPath = dm.getBento().search().container(DockingManager.ID_CONTAINER_WORKSPACE_TOOLS);
+			DockContainerPath containerPath = dm.getBento().search()
+					.container(DockingManager.ID_CONTAINER_ROOT_BOTTOM);
 			if (containerPath == null) {
-				FxThreadUtil.delayedRun(retryDelayMs, () -> tryOpenUi(attempt + 1));
+				FxThreadUtil.delayedRun(250, () -> tryOpenUi(attempt + 1));
 				return;
 			}
 
 			DockContainer container = containerPath.tailContainer();
-			McpStatusPane pane = new McpStatusPane(mcpServer.getEndpoint());
-			Dockable dockable = dm.newToolDockable("MCP", d -> null, pane);
+			McpStatusPane pane = new McpStatusPane(mcpServer.getEndpoint(), mcpServer.getStats());
+			Dockable dockable = dm.newDockable("Recaf MCP", d -> null, pane);
+			dockable.setClosable(false);
+			dockable.setDragGroupMask(DockingManager.GROUP_TOOLS);
 			this.mcpDockable = dockable;
 
 			boolean added;
 			if (container instanceof DockContainerLeaf leaf) {
+				Dockable previouslySelected = leaf.getSelectedDockable();
 				added = leaf.addDockable(dockable);
-				leaf.selectDockable(dockable);
+				if (previouslySelected != null)
+					leaf.selectDockable(previouslySelected);
 			} else if (container instanceof DockContainerBranch branch) {
 				added = branch.addDockable(dockable);
 			} else {
 				added = false;
 			}
 
-			if (!added) {
+			if (!added)
 				logger.warn("Failed to open MCP status UI: could not add dockable");
-			}
 		} catch (Throwable t) {
-			FxThreadUtil.delayedRun(retryDelayMs, () -> tryOpenUi(attempt + 1));
+			FxThreadUtil.delayedRun(250, () -> tryOpenUi(attempt + 1));
 		}
 	}
 

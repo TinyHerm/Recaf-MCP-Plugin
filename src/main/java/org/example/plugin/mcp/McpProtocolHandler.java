@@ -13,9 +13,14 @@ public final class McpProtocolHandler {
 	private static final String PROTOCOL_VERSION = "2025-03-26";
 	private static final Gson GSON = new Gson();
 	private final Map<String, McpTool> tools = new LinkedHashMap<>();
+	private volatile McpToolStats stats;
 
 	public void registerTool(McpTool tool) {
 		tools.put(tool.name(), tool);
+	}
+
+	public void setStats(McpToolStats stats) {
+		this.stats = stats;
 	}
 
 	public String handle(String requestBody) {
@@ -105,12 +110,21 @@ public final class McpProtocolHandler {
 		JsonObject arguments = obj(params.get("arguments"));
 		if (arguments == null) arguments = new JsonObject();
 
+		long start = System.currentTimeMillis();
 		try {
 			JsonObject data = tool.execute(arguments);
 			boolean isError = data.has("error");
-			return rpcOk(id, toolResult(data, isError));
+			JsonObject result = toolResult(data, isError);
+			long elapsed = System.currentTimeMillis() - start;
+			McpToolStats s = stats;
+			if (s != null) s.recordCall(toolName, result, isError, elapsed);
+			return rpcOk(id, result);
 		} catch (Exception e) {
-			return rpcOk(id, toolResult(error("Tool threw: " + e.getMessage()), true));
+			long elapsed = System.currentTimeMillis() - start;
+			JsonObject result = toolResult(error("Tool threw: " + e.getMessage()), true);
+			McpToolStats s = stats;
+			if (s != null) s.recordCall(toolName, result, true, elapsed);
+			return rpcOk(id, result);
 		}
 	}
 }

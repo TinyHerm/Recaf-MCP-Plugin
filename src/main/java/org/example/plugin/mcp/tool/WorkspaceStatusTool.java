@@ -8,7 +8,6 @@ import software.coley.recaf.workspace.model.resource.WorkspaceResource;
 
 import java.time.Instant;
 
-import static org.example.plugin.mcp.util.JsonUtil.error;
 import static org.example.plugin.mcp.util.SchemaBuilder.*;
 
 public final class WorkspaceStatusTool implements McpTool {
@@ -29,18 +28,23 @@ public final class WorkspaceStatusTool implements McpTool {
 
 	@Override
 	public JsonObject execute(JsonObject args) {
-		Workspace ws = workspaceManager.getCurrent();
 		JsonObject out = new JsonObject();
-		out.addProperty("hasWorkspace", ws != null);
 		out.addProperty("timestamp", Instant.now().toString());
-		if (ws == null) return out;
 
+		boolean hasWorkspace = workspaceManager.hasCurrentWorkspace();
+		out.addProperty("hasWorkspace", hasWorkspace);
+		if (!hasWorkspace) return out;
+
+		Workspace ws = workspaceManager.getCurrent();
 		WorkspaceResource primary = ws.getPrimaryResource();
-		out.addProperty("hasPrimaryResource", primary != null);
-		if (primary != null) {
-			JvmClassBundle jvm = primary.getJvmClassBundle();
-			out.addProperty("jvmClassCount", jvm != null ? jvm.size() : 0);
-		}
+		JvmClassBundle jvm = primary.getJvmClassBundle();
+		out.addProperty("jvmClassCount", jvm != null ? jvm.size() : 0);
+		int fileCount = primary.getFileBundle().size();
+		out.addProperty("fileCount", fileCount);
+
+		int libraryCount = ws.getSupportingResources().size();
+		out.addProperty("libraryCount", libraryCount);
+
 		return out;
 	}
 }

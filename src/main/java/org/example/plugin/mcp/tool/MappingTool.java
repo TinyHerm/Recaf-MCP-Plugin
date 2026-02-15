@@ -8,8 +8,6 @@ import software.coley.recaf.services.mapping.IntermediateMappings;
 import software.coley.recaf.services.workspace.WorkspaceManager;
 import software.coley.recaf.workspace.model.Workspace;
 
-import java.util.Map;
-
 import static org.example.plugin.mcp.util.JsonUtil.*;
 import static org.example.plugin.mcp.util.SchemaBuilder.*;
 
@@ -50,11 +48,16 @@ public final class MappingTool implements McpTool {
 
 	@Override
 	public JsonObject execute(JsonObject args) {
+		if (!workspaceManager.hasCurrentWorkspace()) return error("No workspace open");
 		Workspace ws = workspaceManager.getCurrent();
-		if (ws == null) return error("No workspace open");
 
 		IntermediateMappings mappings = new IntermediateMappings();
-		int count = 0;
+		int classCount = 0;
+		int fieldCount = 0;
+		int methodCount = 0;
+		JsonArray classChanges = new JsonArray();
+		JsonArray fieldChanges = new JsonArray();
+		JsonArray methodChanges = new JsonArray();
 
 		JsonArray classRenames = arr(args.get("classRenames"));
 		if (classRenames != null) {
@@ -63,7 +66,14 @@ public final class MappingTool implements McpTool {
 				if (cr == null) continue;
 				String from = str(cr.get("from"));
 				String to = str(cr.get("to"));
-				if (from != null && to != null) { mappings.addClass(from, to); count++; }
+				if (from != null && to != null) {
+					mappings.addClass(from, to);
+					classCount++;
+					JsonObject change = new JsonObject();
+					change.addProperty("from", from);
+					change.addProperty("to", to);
+					classChanges.add(change);
+				}
 			}
 		}
 
@@ -77,7 +87,14 @@ public final class MappingTool implements McpTool {
 				String from = str(fr.get("from"));
 				String to = str(fr.get("to"));
 				if (owner != null && desc != null && from != null && to != null) {
-					mappings.addField(owner, desc, from, to); count++;
+					mappings.addField(owner, desc, from, to);
+					fieldCount++;
+					JsonObject change = new JsonObject();
+					change.addProperty("owner", owner);
+					change.addProperty("desc", desc);
+					change.addProperty("from", from);
+					change.addProperty("to", to);
+					fieldChanges.add(change);
 				}
 			}
 		}
@@ -92,11 +109,19 @@ public final class MappingTool implements McpTool {
 				String from = str(mr.get("from"));
 				String to = str(mr.get("to"));
 				if (owner != null && desc != null && from != null && to != null) {
-					mappings.addMethod(owner, desc, from, to); count++;
+					mappings.addMethod(owner, desc, from, to);
+					methodCount++;
+					JsonObject change = new JsonObject();
+					change.addProperty("owner", owner);
+					change.addProperty("desc", desc);
+					change.addProperty("from", from);
+					change.addProperty("to", to);
+					methodChanges.add(change);
 				}
 			}
 		}
 
+		int count = classCount + fieldCount + methodCount;
 		if (count == 0) return error("No valid renames provided");
 
 		try {
@@ -106,13 +131,13 @@ public final class MappingTool implements McpTool {
 
 			JsonObject out = new JsonObject();
 			out.addProperty("applied", true);
+			out.addProperty("classesRenamed", classCount);
+			out.addProperty("fieldsRenamed", fieldCount);
+			out.addProperty("methodsRenamed", methodCount);
 			out.addProperty("renameCount", count);
-			Map<String, String> mapped = results.getMappedClasses();
-			if (mapped != null && !mapped.isEmpty()) {
-				JsonObject mc = new JsonObject();
-				mapped.forEach(mc::addProperty);
-				out.add("mappedClasses", mc);
-			}
+			out.add("classChanges", classChanges);
+			out.add("fieldChanges", fieldChanges);
+			out.add("methodChanges", methodChanges);
 			return out;
 		} catch (Exception e) {
 			return error("Mapping failed: " + e.getMessage());
