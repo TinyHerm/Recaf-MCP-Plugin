@@ -2,6 +2,7 @@ package org.example.plugin.mcp.tool;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import me.darknet.assembler.error.Diagnostic;
 import software.coley.recaf.services.workspace.WorkspaceManager;
 import software.coley.recaf.services.workspace.patch.PatchApplier;
 import software.coley.recaf.services.workspace.patch.PatchFeedback;
@@ -80,11 +81,11 @@ public final class PatchTool implements McpTool {
 			JsonArray errors = new JsonArray();
 			PatchFeedback feedback = new PatchFeedback() {
 				@Override
-				public void onAssemblerErrorsObserved(java.util.List<me.darknet.assembler.error.Error> errs) {
+				public void onAssemblerErrorsObserved(java.util.List<Diagnostic> errs) {
 					for (var e : errs) {
 						JsonObject eo = new JsonObject();
 						eo.addProperty("type", "assembler");
-						eo.addProperty("message", e.getMessage());
+						eo.addProperty("message", e.message());
 						errors.add(eo);
 					}
 				}

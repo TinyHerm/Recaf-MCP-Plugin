@@ -2,8 +2,8 @@ package org.example.plugin.mcp.tool;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
-import me.darknet.assembler.error.Error;
-import me.darknet.assembler.error.Result;
+import me.darknet.assembler.error.Diagnostic;
+import me.darknet.assembler.error.Outcome;
 import software.coley.recaf.info.member.MethodMember;
 import software.coley.recaf.path.ClassMemberPathNode;
 import software.coley.recaf.path.ClassPathNode;
@@ -72,15 +72,15 @@ public final class MethodDisassembleTool implements McpTool {
 
 		JvmAssemblerPipeline pipeline = assemblerPipelineManager.newJvmAssemblerPipeline(ws);
 		try {
-			Result<String> result = pipeline.disassemble(memberPath);
-			if (!result.isOk()) {
+			Outcome<String> result = pipeline.disassemble(memberPath);
+			if (!result.isSuccess()) {
 				JsonObject out = new JsonObject();
 				out.addProperty("error", "Disassemble failed");
 				JsonArray errors = new JsonArray();
-				for (Error e : result.errors()) {
+				for (Diagnostic e : result.errors()) {
 					JsonObject eo = new JsonObject();
-					eo.addProperty("message", e.getMessage());
-					var loc = e.getLocation();
+					eo.addProperty("message", e.message());
+					var loc = e.location();
 					if (loc != null) {
 						eo.addProperty("line", loc.line());
 						eo.addProperty("column", loc.column());
@@ -92,7 +92,7 @@ public final class MethodDisassembleTool implements McpTool {
 				return out;
 			}
 
-			String text = result.get();
+			String text = result.value();
 			if (text == null) return error("Disassembly returned null");
 
 			boolean truncated = text.length() > maxChars;
