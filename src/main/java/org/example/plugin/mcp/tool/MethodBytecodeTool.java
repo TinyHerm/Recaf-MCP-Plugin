@@ -1,13 +1,13 @@
 package org.example.plugin.mcp.tool;
 
 import com.google.gson.JsonObject;
+import me.darknet.assembler.backend.jvm.printer.JvmPrinterUtil;
 import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.MethodNode;
 import software.coley.recaf.info.JvmClassInfo;
 import software.coley.recaf.path.ClassPathNode;
 import software.coley.recaf.services.workspace.WorkspaceManager;
-import software.coley.recaf.util.BlwUtil;
 import software.coley.recaf.workspace.model.Workspace;
 
 import java.util.ArrayList;
@@ -17,6 +17,7 @@ import static org.example.plugin.mcp.util.JsonUtil.*;
 import static org.example.plugin.mcp.util.SchemaBuilder.*;
 
 public final class MethodBytecodeTool implements McpTool {
+
 
 	private final WorkspaceManager workspaceManager;
 
@@ -73,13 +74,15 @@ public final class MethodBytecodeTool implements McpTool {
 		if (target == null)
 			return error("Method not found: " + methodName + methodDesc + " in " + className);
 
+
+
 		String jasm;
 		try {
 			List<AbstractInsnNode> insns = new ArrayList<>();
 			if (target.instructions != null)
 				for (AbstractInsnNode insn = target.instructions.getFirst(); insn != null; insn = insn.getNext())
 					insns.add(insn);
-			jasm = BlwUtil.toString(insns);
+			jasm = JvmPrinterUtil.toString(insns);
 		} catch (Exception e) {
 			return error("Failed to convert bytecode to JASM: " + e.getMessage());
 		}
