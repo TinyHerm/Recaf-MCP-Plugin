@@ -45,6 +45,7 @@ java {
 repositories {
     mavenLocal()
     mavenCentral()
+    google()
 
     // For Recaf snapshot builds a few transitive dependencies
     maven { url 'https://jitpack.io' }

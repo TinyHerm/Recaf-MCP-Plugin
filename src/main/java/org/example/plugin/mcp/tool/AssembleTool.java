@@ -3,8 +3,8 @@ package org.example.plugin.mcp.tool;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import me.darknet.assembler.ast.ASTElement;
-import me.darknet.assembler.error.Error;
-import me.darknet.assembler.error.Result;
+import me.darknet.assembler.error.Diagnostic;
+import me.darknet.assembler.error.Outcome;
 import me.darknet.assembler.parser.Token;
 import software.coley.recaf.info.JvmClassInfo;
 import software.coley.recaf.path.ClassPathNode;
@@ -56,16 +56,16 @@ public final class AssembleTool implements McpTool {
 
 		JvmAssemblerPipeline pipeline = assemblerPipelineManager.newJvmAssemblerPipeline(ws);
 		try {
-			Result<List<Token>> tokens = pipeline.tokenize(source, "mcp-input");
-			if (!tokens.isOk()) return assemblerErrors("Tokenize failed", tokens);
+			Outcome<List<Token>> tokens = pipeline.tokenize(source, "mcp-input");
+			if (!tokens.isSuccess()) return assemblerErrors("Tokenize failed", tokens);
 
-			Result<List<ASTElement>> ast = pipeline.fullParse(tokens.get());
-			if (!ast.isOk()) return assemblerErrors("Parse failed", ast);
+			Outcome<List<ASTElement>> ast = pipeline.fullParse(tokens.value());
+			if (!ast.isSuccess()) return assemblerErrors("Parse failed", ast);
 
-			Result<JvmClassInfo> assembled = pipeline.assembleAndWrap(ast.get(), path);
-			if (!assembled.isOk()) return assemblerErrors("Assembly failed", assembled);
+			Outcome<JvmClassInfo> assembled = pipeline.assembleAndWrap(ast.value(), path);
+			if (!assembled.isSuccess()) return assemblerErrors("Assembly failed", assembled);
 
-			JvmClassInfo newInfo = assembled.get();
+			JvmClassInfo newInfo = assembled.value();
 			if (newInfo == null) return error("Assembler yielded no class");
 
 			if (!name.equals(newInfo.getName()))
@@ -93,15 +93,15 @@ public final class AssembleTool implements McpTool {
 		}
 	}
 
-	private static JsonObject assemblerErrors(String phase, Result<?> result) {
+	private static JsonObject assemblerErrors(String phase, Outcome<?> result) {
 		JsonObject out = new JsonObject();
 		out.addProperty("error", phase);
 		JsonArray arr = new JsonArray();
 		try {
-			for (Error err : result.errors()) {
+			for (Diagnostic err : result.errors()) {
 				JsonObject eo = new JsonObject();
-				eo.addProperty("message", err.getMessage());
-				var loc = err.getLocation();
+				eo.addProperty("message", err.message());
+				var loc = err.location();
 				if (loc != null) {
 					eo.addProperty("line", loc.line());
 					eo.addProperty("column", loc.column());
